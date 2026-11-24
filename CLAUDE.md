@@ -1,0 +1,78 @@
+# CLAUDE.md
+
+logis is a Rust dotfile manager with chezmoi's model: a source directory, a computed target state,
+and `apply`. It uses Pkl for config and Jinja (minijinja, still to be confirmed) for templates.
+It must not reuse chezmoi's names, paths or special files.
+
+The reference implementation and behavioural oracle is the chezmoi fork at
+`~/Projects/github/thoroc/chezmoi`, plus the pinned `chezmoi` in `mise.toml`.
+
+## Where things are
+
+- `crates/logis`: the binary. `src/cmd/` holds one module per command.
+  - `tests/architecture.rs`: ArchUnitRust rules
+  - `tests/bdd.rs` and `tests/steps/`: cucumber runner and steps
+  - `tests/features/*.feature`: the features
+- `crates/logis-core`: the engine. `src/system/` holds the `System` trait (`port.rs`) and
+  `RealSystem` (`real.rs`).
+- `crates/logis-config`: Pkl loading. `pkl/Logis.pkl` is the schema.
+- `crates/logis-template`: the minijinja engine.
+- `oracle/`: rust-anything inputs, cases and `tags.toml`. `scripts/`: the oracle scripts.
+- `.context/`: findings and plans. It is gitignored, with one markdown file per write. Read
+  `.context/plans/roadmap.md` and `.context/plans/bdd-tdd.md` before starting work.
+- `DECISIONS.md`: the ADRs. Every intended divergence from chezmoi needs one.
+
+## Workflow: BDD, then TDD
+
+1. **Spec what we have.** Write a scenario in neutral domain vocabulary. Run
+   `mise run bdd:oracle`; it must be green against chezmoi, or the spec is wrong.
+2. **Spec what logis must achieve.** Tag scenarios `@chezmoi-only` / `@logis-only` where the two
+   tools diverge, with an ADR. Mark scenarios that logis fails as `@wip`.
+3. **TDD the units underneath.** Port the matching Go test tables first, then red, green,
+   refactor.
+4. **Finish.** Remove `@wip` once `mise run bdd:logis` is green. Commit the feature, the tests and
+   the code together.
+
+No production code without a failing scenario or test first. Commands are added to `cmd/` only
+when a scenario for them is red.
+
+Tool differences (binary name, flags, config format, special file names) belong in
+`tests/steps/adapter.rs`, never in feature files.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `mise install` | Install the tools; run `hk install` once afterwards for the git hooks |
+| `mise run test` | Unit, doc, architecture and BDD tests against logis |
+| `mise run bdd:oracle` | BDD tests against the pinned chezmoi |
+| `mise run lint` | fmt, clippy `-D warnings`, cargo-deny, typos, agnix |
+| `mise run ci` | Everything CI runs |
+| `cargo test -p logis --test architecture` | The architecture rules on their own |
+
+## Rules
+
+- **Filesystem and process access:** only through `logis_core::system::System`. Only
+  `system/real.rs` may use `std::fs` or `std::process`, and `tests/architecture.rs` enforces this.
+- **Layers:**
+  - `core` depends on no other logis crate.
+  - `config` and `template` may depend only on `core`.
+  - The CLI may depend on all of them.
+- **Size and cycles:** no file-level cycles, and files stay under 400 non-blank lines. Keep the
+  trait in its own file so that implementations do not form a cycle with `mod.rs`.
+- **Complexity:** clippy `cognitive_complexity` at 15. Never port a chezmoi function that
+  bonsai-lint scores above 15 as a single Rust function; spec it, then decompose it. The worst
+  are `SourceState::Read` (171) and `SourceState::Add` (145).
+- **Oracle chezmoi:** resolve it with `mise which chezmoi`, never through `PATH`. Run it only in a
+  sandbox: temp `HOME` and `XDG_*`, `GIT_CONFIG_GLOBAL=/dev/null`, minimal `PATH`.
+- **Pinning:** `archunit` is pre-1.0 and pinned exactly. Bump it deliberately.
+- **After editing agent configs:** run `agnix --strict --target claude-code .` after changing this
+  file or anything under `.claude/`.
+
+## Conventions
+
+- Use `bun` for JS tooling, never bare `npm install`. Use `fd` and `rg` for search.
+- No emojis. Keep responses short and direct, and reference code as `path:line`.
+- Before changing anything, check its blast radius and say what you checked.
+- Make one logical change per commit, with `git commit -o <files>`. Commit or push only when asked.
+- Mark unverified facts as "verify" in docs.

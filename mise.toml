@@ -1,0 +1,73 @@
+# Rust itself is pinned in rust-toolchain.toml (read by rustup and mise).
+
+[tools]
+pkl = "0.32.1"                                  # logis runtime dependency and hk config language
+"cargo:hk" = "2.0.1"                            # cargo backend: hk ships no darwin/x86_64 binaries
+chezmoi = "2.74.1"                              # the ORACLE: bump deliberately, then re-record
+age = "1.3.2"
+typos = "1.52.2"
+taplo = "0.10.0"                                # hk: TOML lint
+actionlint = "1.7.12"                           # hk: GitHub Actions lint
+shellcheck = "0.11.0"                           # hk: shell scripts, and actionlint's run: blocks
+cargo-nextest = "0.9.152"
+"cargo:cargo-deny" = "0.21.0"                   # cargo backend: no darwin/x86_64 binary
+"github:ryckakas/bonsai-lint" = "0.5.1"         # Go and scripts only; it cannot score Rust
+"github:erkamyaman/rust-anything" = "4.0.0"     # oracle record/replay
+"cargo:agnix-cli" = "0.61.0"                    # agent config linter; no darwin/x86_64 binary or wheel
+
+# Oracle scripts and the BDD adapter resolve chezmoi with `mise which chezmoi`, never a chezmoi
+# found elsewhere on PATH (a Homebrew or `latest` install may shadow the pinned one).
+
+[tasks.build]
+run = "cargo build --workspace"
+
+[tasks."build:release"]
+run = "cargo build --release --bin logis"
+
+[tasks.test]
+description = "Unit, architecture and BDD (logis, excluding @wip) tests"
+depends = ["build"]
+run = [
+  "cargo nextest run --workspace --no-tests=pass -E 'not binary(bdd)'",  # bdd has its own harness
+  "cargo test --doc --workspace",
+  "cargo test -p logis --test bdd",
+]
+
+[tasks.arch]
+description = "Architecture rules (ArchUnitRust)"
+run = "cargo nextest run -p logis --test architecture"
+
+[tasks."bdd:oracle"]
+description = "BDD features against chezmoi: what we have"
+env = { BDD_TOOL = "chezmoi" }
+run = "cargo test -p logis --test bdd"
+
+[tasks."bdd:logis"]
+description = "BDD features against logis: what we must achieve (skips @wip)"
+depends = ["build"]
+env = { BDD_TOOL = "logis" }
+run = "cargo test -p logis --test bdd"
+
+[tasks.lint]
+run = [
+  "cargo fmt --all --check",
+  "cargo clippy --workspace --all-targets -- -D warnings",
+  "cargo deny check",
+  "typos",
+  "agnix --strict --target claude-code .",
+]
+
+[tasks.fix]
+run = ["cargo fmt --all", "cargo clippy --workspace --all-targets --fix --allow-dirty"]
+
+[tasks."oracle:record"]
+description = "Record chezmoi behaviour into oracle/cases (sandboxed)"
+run = "scripts/oracle-record.sh"
+
+[tasks."oracle:replay"]
+description = "Replay oracle cases against logis"
+depends = ["build:release"]
+run = "scripts/oracle-replay.sh"
+
+[tasks.ci]
+depends = ["lint", "test", "bdd:oracle"]

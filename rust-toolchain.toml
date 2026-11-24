@@ -1,0 +1,5 @@
+# Single source of truth for the Rust version. rustup and mise both read this file.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

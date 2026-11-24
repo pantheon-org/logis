@@ -1,0 +1,17 @@
+/// Schema for logis configuration. User config amends this module:
+///
+/// ```pkl
+/// amends "package://.../logis@<version>#/Logis.pkl"
+/// ```
+///
+/// Fields are added test-first in roadmap phase 3, each with a BDD scenario.
+module logis.Logis
+
+/// Directory holding the source state. Default: `~/.local/share/logis`.
+sourceDir: String?
+
+/// Directory the source state is applied to. Default: the user's home directory.
+destDir: String?
+
+/// Arbitrary user data made available to templates.
+data: Mapping<String, Any> = new {}

@@ -1,0 +1,14 @@
+# Every recorded oracle case gets exactly one tag (see .context/plans/oracle-corpus.md):
+#   same               - replayed unchanged (binary/path names mapped)
+#   config-transform   - chezmoi config rewritten to logis.pkl before replay
+#   template-transform - .tmpl rewritten to .j2 before replay
+#   excluded           - not replayed; give a reason
+#
+# [cases."apply-1"]
+# tag = "same"
+#
+# [cases."onepassword-3"]
+# tag = "excluded"
+# reason = "needs the op CLI"
+
+[cases]

@@ -1,0 +1,31 @@
+[package]
+name = "logis"
+description = "Manage your dotfiles across machines"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "logis"
+path = "src/main.rs"
+
+[[test]]
+name = "bdd"
+harness = false
+
+[dependencies]
+clap = { version = "4.6.10", features = ["derive"] }
+logis-core.workspace = true
+
+[dev-dependencies]
+archunit = "=0.0.2"
+cucumber = "0.23.0"
+futures = "0.3.34"
+tempfile = "3.27.0"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }

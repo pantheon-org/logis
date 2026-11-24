@@ -1,0 +1,19 @@
+amends "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Builtins.pkl"
+// Using a coding agent? See https://hk.jdx.dev/agents
+
+steps {
+    ["cargo_fmt"] = Builtins.cargo_fmt
+    ["cargo_clippy"] = Builtins.cargo_clippy
+    ["cargo_deny"] = Builtins.cargo_deny
+    ["typos"] = Builtins.typos
+    ["taplo"] = Builtins.taplo
+    ["pkl"] = Builtins.pkl
+    ["actionlint"] = Builtins.actionlint
+    ["shellcheck"] = Builtins.shellcheck
+
+    ["agnix"] {
+        glob = List("CLAUDE.md", "AGENTS.md", ".claude/**", "**/SKILL.md", ".mcp.json")
+        check = "agnix --strict --target claude-code ."
+    }
+}
