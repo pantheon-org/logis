@@ -60,6 +60,22 @@ run = [
 [tasks.fix]
 run = ["cargo fmt --all", "cargo clippy --workspace --all-targets --fix --allow-dirty"]
 
+[tasks."spec:seed"]
+description = "Seed @skeleton features from chezmoi txtar scripts (never overwrites existing files)"
+run = "cargo xtask txtar2feature chezmoi/internal/cmd/testdata/scripts crates/logis/tests/features/from-txtar"
+
+[tasks."spec:check"]
+description = "Check every chezmoi txtar script converts to valid Gherkin (needs chezmoi/ checkout)"
+run = "cargo nextest run -p xtask --test real_corpus --run-ignored ignored-only"
+
+[tasks."spec:coverage"]
+description = "Count specified vs skeleton scenarios"
+run = '''
+total=$(rg -c '^\s*Scenario' crates/logis/tests/features -g '*.feature' | awk -F: '{s+=$2} END {print s}')
+skel=$(rg -c '^\s*@skeleton' crates/logis/tests/features -g '*.feature' | awk -F: '{s+=$2} END {print s+0}')
+echo "scenarios: $total, specified: $((total - skel)), skeleton: $skel"
+'''
+
 [tasks."oracle:record"]
 description = "Record chezmoi behaviour into oracle/cases (sandboxed)"
 run = "scripts/oracle-record.sh"
