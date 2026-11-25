@@ -3,11 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Tool {
-    Chezmoi,
-    Logis,
-}
+pub use super::selection::Tool;
 
 impl Tool {
     pub fn from_env() -> Self {

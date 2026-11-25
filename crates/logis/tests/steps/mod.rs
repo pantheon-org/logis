@@ -3,6 +3,7 @@
 
 mod adapter;
 mod common;
+pub mod selection;
 
 pub use adapter::Tool;
 
