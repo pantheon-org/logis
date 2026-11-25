@@ -1,0 +1,6 @@
+# Seeded features (features/from-txtar/) quote chezmoi's txtar scripts verbatim as `#` comments,
+# including test data such as `replaceAllRegex "ba" "BA"`. Skip `#` comment lines in feature files;
+# scenario titles and steps are still checked. (typos matches type globs on file names, not paths.)
+[type.gherkin]
+extend-glob = ["*.feature"]
+extend-ignore-re = ["(?m)^\\s*#.*$"]
