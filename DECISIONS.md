@@ -49,10 +49,37 @@ divergence from chezmoi always gets an entry, plus tagged BDD scenarios.
   - agnix for agent configs
   - cargo-deny for dependencies and licences
 
+## ADR-007: Keep chezmoi's source-name grammar, and protect three more prefixes
+
+- Status: accepted (2026-11-25)
+- logis reads and writes chezmoi's source names (`dot_`, `private_`, `exact_`, `run_once_`,
+  `.tmpl`, ...), ported from `internal/chezmoi/attr.go` into `logis_core::source_name`.
+  Existing chezmoi source directories therefore parse the same way.
+- Divergence: when writing a source name, logis also protects target names that start with
+  these prefixes, by adding `literal_`:
+  - `remove_` and `external_`, for directories
+  - `onchange_`, for files and scripts
+- Why: chezmoi's protection lists (`dirPrefixRegexp`, `filePrefixRegexp`) lack these prefixes,
+  so such names do not round-trip.
+  - With chezmoi 2.74.1, `add ~/remove_foo` stores the directory as `remove_foo`, which reads
+    back as "remove `foo`". `managed` and `status` then report `foo`, and `external_bar`
+    likewise becomes `bar`.
+  - The script `onchange_x` reads back as the onchange script `x`.
+  - Property tests over random names (`crates/logis-core/tests/source_name_props.rs`) found
+    exactly these cases and no others.
+- Compatibility:
+  - Only these names are written differently, and only by logis.
+  - chezmoi reads the protected names (`literal_remove_foo`) correctly.
+  - Names chezmoi already wrote still parse as chezmoi parses them.
+  - Regular files named `onchange_*` also get `literal_`, as chezmoi already does for `once_*`.
+    chezmoi parses both forms to the same target.
+- Specified by: `attribute_like_dir_names_are_protected` and `onchange_names_are_protected`
+  (`crates/logis-core/tests/source_name.rs`). The BDD scenarios are in
+  `crates/logis/tests/features/from-txtar/add.feature`: "...manages different targets"
+  (`@chezmoi-only`) and "...manages the same targets" (`@logis-only`).
+
 ## Open (proposed)
 
 - `redb` for persistent state, in place of chezmoi's bolt.
-- Keep chezmoi's source-name attributes (`dot_`, `private_`, `exact_`, ...) so migration stays
-  easy.
 - `.logis*` special files; `~/.config/logis/` and `~/.local/share/logis/` locations.
 - Platforms: macOS and Linux first, Windows later.

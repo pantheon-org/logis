@@ -1,7 +1,8 @@
 //! Map target names to source-state file names, so features never mention them.
 //!
-//! This is chezmoi's naming (`dot_`, `private_`, `executable_`, ...). logis keeps it for now
-//! (proposed ADR: keep the source-name attributes); if that changes, only this file changes.
+//! This is chezmoi's naming (`dot_`, `private_`, `executable_`, ...), which logis keeps
+//! (ADR-007). It is kept independent of `logis_core::source_name` on purpose: fixtures must not
+//! be built by the code under test. If the naming changes, only this file changes.
 //! Unit-tested through `tests/bdd_support.rs`.
 
 use std::str::FromStr;

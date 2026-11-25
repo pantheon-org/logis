@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc ddf447c25ade56a68268f238ea3e1a05f4b7d16479dbed5cd8503abdbb90a5ab # shrinks to attr = FileAttr { target_name: "onchange_", target_type: Script, condition: Always, order: During, empty: false, encrypted: false, executable: false, private: false, read_only: false, template: false }, suffix = ""
+cc aaa995fcc0e60860a3aadd06c81cda14c5900170d5e2b772f932cc67bd874323 # shrinks to target_name = "remove_", f = [false, false, false, false, false]

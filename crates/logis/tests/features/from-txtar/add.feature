@@ -126,3 +126,43 @@ Feature: add
     And the source state manages "~/.parent/child" as an exact
     And the source state manages "~/.parent/child/file" as a file containing "# contents of child file"
     And the source state does not manage "~/.parent/other_file"
+
+  # Not from the txtar script. ADR-007: chezmoi stores a directory named like an attribute
+  # without protecting it, so the target it manages changes name. logis protects the name.
+  @chezmoi-only
+  Scenario: add of directories named like attributes manages different targets
+    Given the home directory contains:
+      | target              | kind      | contents |
+      | ~/remove_foo        | directory |          |
+      | ~/remove_foo/file   | file      | # foo    |
+      | ~/external_bar      | directory |          |
+      | ~/external_bar/file | file      | # bar    |
+    When I run "add ~/remove_foo ~/external_bar"
+    And I run "managed"
+    Then it succeeds
+    And the output is:
+      """
+      bar
+      bar/file
+      foo
+      foo/file
+      """
+
+  @logis-only
+  Scenario: add of directories named like attributes manages the same targets
+    Given the home directory contains:
+      | target              | kind      | contents |
+      | ~/remove_foo        | directory |          |
+      | ~/remove_foo/file   | file      | # foo    |
+      | ~/external_bar      | directory |          |
+      | ~/external_bar/file | file      | # bar    |
+    When I run "add ~/remove_foo ~/external_bar"
+    And I run "managed"
+    Then it succeeds
+    And the output is:
+      """
+      external_bar
+      external_bar/file
+      remove_foo
+      remove_foo/file
+      """
