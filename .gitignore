@@ -1,4 +1,6 @@
 /target
 /.context/
+# Local checkout of the chezmoi fork, used as reference and oracle source. Never committed.
+/chezmoi/
 .DS_Store
 *.rust-anything.bak
