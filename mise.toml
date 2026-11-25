@@ -1,19 +1,30 @@
 # Rust itself is pinned in rust-toolchain.toml (read by rustup and mise).
 
+# Needed for os = ["<os>/<arch>"] tool filters below.
+min_version = "2026.11.12"
+
 [tools]
 pkl = "0.32.1"                                  # logis runtime dependency and hk config language
-"cargo:hk" = "2.0.1"                            # cargo backend: hk ships no darwin/x86_64 binaries
 chezmoi = "2.74.1"                              # the ORACLE: bump deliberately, then re-record
+
+# hk, cargo-deny and agnix publish no Intel macOS (darwin/x86_64) binaries. Everywhere else,
+# including both CI runners (linux/x64, macos/arm64), use the prebuilt GitHub release; on Intel
+# macOS only, build from source with the cargo backend. Keep each pair on the same version.
+"github:jdx/hk" = { version = "2.0.1", os = ["linux", "windows", "macos/arm64"] }
+"cargo:hk" = { version = "2.0.1", os = ["macos/x64"] }
+"github:EmbarkStudios/cargo-deny" = { version = "0.21.0", os = ["linux", "windows", "macos/arm64"] }
+"cargo:cargo-deny" = { version = "0.21.0", os = ["macos/x64"] }
+"github:agent-sh/agnix" = { version = "0.61.0", os = ["linux", "windows", "macos/arm64"] }
+"cargo:agnix-cli" = { version = "0.61.0", os = ["macos/x64"] }
+
 age = "1.3.2"
 typos = "1.52.2"
 taplo = "0.10.0"                                # hk: TOML lint
 actionlint = "1.7.12"                           # hk: GitHub Actions lint
 shellcheck = "0.11.0"                           # hk: shell scripts, and actionlint's run: blocks
 cargo-nextest = "0.9.152"
-"cargo:cargo-deny" = "0.21.0"                   # cargo backend: no darwin/x86_64 binary
 "github:ryckakas/bonsai-lint" = "0.5.1"         # Go and scripts only; it cannot score Rust
 "github:erkamyaman/rust-anything" = "4.0.0"     # oracle record/replay
-"cargo:agnix-cli" = "0.61.0"                    # agent config linter; no darwin/x86_64 binary or wheel
 
 # Oracle scripts and the BDD adapter resolve chezmoi with `mise which chezmoi`, never a chezmoi
 # found elsewhere on PATH (a Homebrew or `latest` install may shadow the pinned one).
