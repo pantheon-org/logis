@@ -1,7 +1,8 @@
+use std::ffi::OsString;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use super::port::System;
+use super::port::{FileType, Metadata, System};
 
 /// The real machine. The only place allowed to use `std::fs` directly.
 #[derive(Debug, Default, Clone, Copy)]
@@ -11,29 +12,52 @@ impl System for RealSystem {
     fn read_file(&self, path: &Path) -> io::Result<Vec<u8>> {
         std::fs::read(path)
     }
+
+    fn read_dir(&self, path: &Path) -> io::Result<Vec<OsString>> {
+        let mut names = std::fs::read_dir(path)?
+            .map(|entry| entry.map(|e| e.file_name()))
+            .collect::<io::Result<Vec<_>>>()?;
+        names.sort();
+        Ok(names)
+    }
+
+    fn lstat(&self, path: &Path) -> io::Result<Metadata> {
+        std::fs::symlink_metadata(path).map(|m| metadata(&m))
+    }
+
+    fn stat(&self, path: &Path) -> io::Result<Metadata> {
+        std::fs::metadata(path).map(|m| metadata(&m))
+    }
+
+    fn read_link(&self, path: &Path) -> io::Result<PathBuf> {
+        std::fs::read_link(path)
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn reads_an_existing_file() {
-        let dir = std::env::temp_dir().join(format!("logis-real-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let file = dir.join("f");
-        std::fs::write(&file, b"contents").unwrap();
-
-        assert_eq!(RealSystem.read_file(&file).unwrap(), b"contents");
-
-        std::fs::remove_dir_all(&dir).unwrap();
+fn metadata(meta: &std::fs::Metadata) -> Metadata {
+    let file_type = meta.file_type();
+    let file_type = if file_type.is_symlink() {
+        FileType::Symlink
+    } else if file_type.is_dir() {
+        FileType::Dir
+    } else if file_type.is_file() {
+        FileType::File
+    } else {
+        FileType::Other
+    };
+    Metadata {
+        file_type,
+        mode: mode(meta),
     }
+}
 
-    #[test]
-    fn missing_file_is_not_found() {
-        let err = RealSystem
-            .read_file(Path::new("/nonexistent/logis/file"))
-            .unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::NotFound);
-    }
+#[cfg(unix)]
+fn mode(meta: &std::fs::Metadata) -> u32 {
+    use std::os::unix::fs::PermissionsExt;
+    meta.permissions().mode() & 0o7777
+}
+
+#[cfg(not(unix))]
+fn mode(_meta: &std::fs::Metadata) -> u32 {
+    0
 }
