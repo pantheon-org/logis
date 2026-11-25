@@ -4,8 +4,8 @@ logis is a Rust dotfile manager with chezmoi's model: a source directory, a comp
 and `apply`. It uses Pkl for config and Jinja (minijinja, still to be confirmed) for templates.
 It must not reuse chezmoi's names, paths or special files.
 
-The reference implementation and behavioural oracle is the chezmoi fork at
-`~/Projects/github/thoroc/chezmoi`, plus the pinned `chezmoi` in `mise.toml`.
+The reference implementation and behavioural oracle is the chezmoi fork checked out at `chezmoi/`
+in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.toml`.
 
 ## Where things are
 
