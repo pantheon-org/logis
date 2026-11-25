@@ -2,8 +2,16 @@
 
 mod cmd;
 
+use std::process::ExitCode;
+
 use clap::Parser;
 
-fn main() {
-    let _cli = cmd::Cli::parse();
+fn main() -> ExitCode {
+    match cmd::run(cmd::Cli::parse()) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(message) => {
+            eprintln!("logis: {message}");
+            ExitCode::FAILURE
+        }
+    }
 }

@@ -102,7 +102,8 @@ fn output_is_empty(world: &mut LogisWorld) {
     assert!(out.stdout.is_empty(), "{}", describe(out));
 }
 
-/// Exact stdout. `{home}` in the expected text stands for the sandbox home directory.
+/// Exact stdout. `{home}` and `{source}` in the expected text stand for the sandbox home and
+/// source directories.
 ///
 /// Gherkin strips the indentation shared by all docstring lines, so output whose lines all start
 /// with a space (such as `status`) is written with a `|` margin: if every line starts with `|`,
@@ -122,7 +123,9 @@ fn output_is(world: &mut LogisWorld, step: &Step) {
         .collect::<Vec<_>>()
         .join("\n");
     expected.push('\n');
-    let expected = expected.replace("{home}", &world.home().display().to_string());
+    let expected = expected
+        .replace("{home}", &world.home().display().to_string())
+        .replace("{source}", &world.source_dir().display().to_string());
     let actual = String::from_utf8_lossy(&world.last_output().stdout);
     assert_eq!(actual, expected, "{}", describe(world.last_output()));
 }

@@ -71,12 +71,12 @@ impl Tool {
             .env("GIT_CONFIG_GLOBAL", "/dev/null")
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .current_dir(&home);
+        cmd.arg("--source")
+            .arg(sandbox.join("source"))
+            .arg("--destination")
+            .arg(&home);
         if self == Self::Chezmoi {
-            cmd.arg("--source")
-                .arg(sandbox.join("source"))
-                .arg("--destination")
-                .arg(&home)
-                .arg("--config")
+            cmd.arg("--config")
                 .arg(sandbox.join("config/chezmoi/chezmoi.toml"))
                 .arg("--no-tty");
         }

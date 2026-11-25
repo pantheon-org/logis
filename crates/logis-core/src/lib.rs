@@ -4,5 +4,8 @@
 //! dry-run, read-only and test sandboxes behave identically to the real system.
 //! `tests/architecture.rs` enforces that boundary.
 
+pub mod entry_type;
+pub mod managed;
 pub mod source_name;
+pub mod source_state;
 pub mod system;

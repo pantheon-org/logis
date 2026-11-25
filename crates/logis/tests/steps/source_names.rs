@@ -16,6 +16,7 @@ pub enum Kind {
     Empty,
     Symlink,
     Create,
+    Script,
     Directory,
     ExactDirectory,
 }
@@ -31,6 +32,7 @@ impl FromStr for Kind {
             "empty" => Self::Empty,
             "symlink" => Self::Symlink,
             "create" => Self::Create,
+            "script" => Self::Script,
             "directory" => Self::Directory,
             "exact" => Self::ExactDirectory,
             other => return Err(format!("unknown kind {other:?}")),
@@ -52,13 +54,19 @@ impl Kind {
             Self::Empty => "empty_",
             Self::Symlink => "symlink_",
             Self::Create => "create_",
+            Self::Script => "run_",
             Self::ExactDirectory => "exact_",
         }
     }
 }
 
 /// Attribute prefixes a source name may carry, in any order chezmoi accepts.
-const PREFIXES: [&str; 10] = [
+const PREFIXES: [&str; 15] = [
+    "run_",
+    "once_",
+    "onchange_",
+    "before_",
+    "after_",
     "create_",
     "modify_",
     "remove_",

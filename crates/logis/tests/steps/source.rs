@@ -45,6 +45,17 @@ fn source_manages(world: &mut LogisWorld, step: &Step) {
     }
 }
 
+/// A file in the source directory whose name starts with `.`: not part of the source state
+/// unless it is one of the tool's special files.
+#[given(expr = "the source directory contains a hidden file {string}")]
+fn hidden_source_file(world: &mut LogisWorld, name: String) {
+    assert!(
+        name.starts_with('.') && !name.contains('/'),
+        "hidden file names start with . and have no /: {name:?}"
+    );
+    fs::write(world.source_dir().join(name), "# hidden\n").expect("write hidden file");
+}
+
 /// Remove everything from the source state (for scenarios that override the Background).
 #[given("the source state is empty")]
 fn source_is_empty(world: &mut LogisWorld) {

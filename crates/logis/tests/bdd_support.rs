@@ -9,6 +9,7 @@ use source_names::{Kind, decode, encode};
 fn kinds_parse_from_feature_words() {
     assert_eq!("file".parse(), Ok(Kind::File));
     assert_eq!("exact".parse(), Ok(Kind::ExactDirectory));
+    assert_eq!("script".parse(), Ok(Kind::Script));
     assert!("bogus".parse::<Kind>().is_err());
 }
 
@@ -34,6 +35,7 @@ fn encodes_dot_and_kind_prefixes() {
     assert_eq!(encode(".create", Kind::Create), "create_dot_create");
     assert_eq!(encode(".dir", Kind::Directory), "dot_dir");
     assert_eq!(encode("subdir", Kind::ExactDirectory), "exact_subdir");
+    assert_eq!(encode("script", Kind::Script), "run_script");
 }
 
 #[test]
@@ -43,6 +45,8 @@ fn decodes_any_attribute_prefixes_and_template_suffix() {
     assert_eq!(decode("exact_subdir"), "subdir");
     assert_eq!(decode("dot_template.tmpl"), ".template");
     assert_eq!(decode("plain"), "plain");
+    assert_eq!(decode("run_once_before_script"), "script");
+    assert_eq!(decode("run_once_before_script"), "script");
 }
 
 #[test]
@@ -54,6 +58,7 @@ fn decode_inverts_encode() {
         Kind::Empty,
         Kind::Symlink,
         Kind::Create,
+        Kind::Script,
         Kind::Directory,
         Kind::ExactDirectory,
     ] {
