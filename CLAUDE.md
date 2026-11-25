@@ -43,6 +43,19 @@ when a scenario for them is red.
 Tool differences (binary name, flags, config format, special file names) belong in
 `tests/steps/adapter.rs`, never in feature files.
 
+Writing features:
+
+- **Target paths:** write paths as `~/...`.
+- **Source state:** describe it by target and kind in a `the source state manages:` table.
+  `tests/steps/source_names.rs` maps targets to source names such as `dot_` and `private_`, so
+  feature files never mention them.
+- **Exact output:** to assert output whose lines all start with a space (`status`), prefix every
+  docstring line with `|`. Gherkin strips shared indentation.
+- **Fixed umask:** tools run under `umask 022`, and fixture directories are created 0755, so
+  results do not depend on the caller's umask.
+- **Running a subset:** never pass cucumber's `--name`/`--tags` filters. They bypass the tag
+  selection, so the runner refuses them. Run the whole suite and filter its output.
+
 ## Commands
 
 | Command | What it does |

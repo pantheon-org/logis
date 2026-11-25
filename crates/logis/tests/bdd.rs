@@ -30,8 +30,25 @@ fn tags<'a>(feature: &'a Feature, rule: Option<&'a Rule>, scenario: &'a Scenario
         .collect()
 }
 
+/// cucumber's own `--name`/`--tags` filters replace the tag selection above, so `@skeleton`
+/// scenarios (which have no steps) would run and pass vacuously. Refuse them.
+fn refuse_cli_filters() {
+    let filter = std::env::args().skip(1).find(|a| {
+        ["-n", "--name", "-t", "--tags"]
+            .iter()
+            .any(|f| a == f || a.starts_with(&format!("{f}=")))
+    });
+    if let Some(flag) = filter {
+        eprintln!(
+            "BDD: {flag} bypasses @skeleton/@wip/OS selection; run the whole suite and filter its output"
+        );
+        std::process::exit(2);
+    }
+}
+
 #[tokio::main]
 async fn main() {
+    refuse_cli_filters();
     let tool = Tool::from_env();
     let os = Os::current();
     eprintln!("BDD: running features against {tool:?} on {os:?}");
