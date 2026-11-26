@@ -33,10 +33,13 @@ enum Command {
 }
 
 /// Run the parsed command line. Errors are returned as the message to print.
+///
+/// The umask is read here, once, while logis has a single thread (see `process_umask`).
 pub fn run(cli: Cli) -> Result<(), String> {
+    let umask = logis_core::system::process_umask();
     let dirs = dirs::Dirs::resolve(cli.source, cli.destination)?;
     match cli.command {
-        Some(Command::Cat(args)) => cat::run(&dirs, &args),
+        Some(Command::Cat(args)) => cat::run(&dirs, umask, &args),
         Some(Command::Managed(args)) => managed::run(&dirs, &args),
         None => Ok(()),
     }

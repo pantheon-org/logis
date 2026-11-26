@@ -4,6 +4,27 @@ use std::path::{Path, PathBuf};
 
 use super::port::{FileType, Metadata, System};
 
+/// The process umask, as chezmoi reads it at start-up (`internal/chezmoi/chezmoi_unix.go`).
+///
+/// Reading the umask means setting it: it is set to 0 and straight back. A file another thread
+/// creates in between would get the wrong mode, so call this once, before starting threads,
+/// and pass the value on. It is 0 where there is no umask.
+#[must_use]
+pub fn process_umask() -> u32 {
+    #[cfg(unix)]
+    {
+        use rustix::fs::Mode;
+        use rustix::process::umask;
+        let current = umask(Mode::empty());
+        umask(current);
+        u32::from(current.bits())
+    }
+    #[cfg(not(unix))]
+    {
+        0
+    }
+}
+
 /// The real machine. The only place allowed to use `std::fs` directly.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RealSystem;
