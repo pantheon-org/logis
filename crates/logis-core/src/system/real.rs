@@ -53,6 +53,81 @@ impl System for RealSystem {
     fn read_link(&self, path: &Path) -> io::Result<PathBuf> {
         std::fs::read_link(path)
     }
+
+    fn mkdir(&self, path: &Path, perm: u32) -> io::Result<()> {
+        let mut builder = std::fs::DirBuilder::new();
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut builder, perm);
+        #[cfg(not(unix))]
+        let _ = perm;
+        builder.create(path)
+    }
+
+    fn chmod(&self, path: &Path, perm: u32) -> io::Result<()> {
+        set_perm(path, perm)
+    }
+
+    /// Like chezmoi's safe mode (`renameio`): a temporary file in the same directory, given
+    /// its mode before its contents, then renamed over `path`.
+    fn write_file(&self, path: &Path, contents: &[u8], perm: u32) -> io::Result<()> {
+        use std::io::Write;
+        let mut file = temp_builder().tempfile_in(parent(path))?;
+        set_perm(file.path(), perm)?;
+        file.write_all(contents)?;
+        file.persist(path).map(drop).map_err(|e| e.error)
+    }
+
+    fn write_symlink(&self, linkname: &Path, path: &Path) -> io::Result<()> {
+        let link = temp_builder().make_in(parent(path), |temp| symlink(linkname, temp))?;
+        link.persist(path).map(drop).map_err(|e| e.error)
+    }
+
+    fn remove_all(&self, path: &Path) -> io::Result<()> {
+        match std::fs::symlink_metadata(path) {
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(err),
+            Ok(meta) if meta.is_dir() => std::fs::remove_dir_all(path),
+            Ok(_) => std::fs::remove_file(path),
+        }
+    }
+}
+
+fn temp_builder() -> tempfile::Builder<'static, 'static> {
+    let mut builder = tempfile::Builder::new();
+    builder.prefix(".logis-tmp-");
+    builder
+}
+
+/// The directory `path` is in; the current directory for a bare name.
+fn parent(path: &Path) -> &Path {
+    match path.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir,
+        _ => Path::new("."),
+    }
+}
+
+#[cfg(unix)]
+fn set_perm(path: &Path, perm: u32) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(perm))
+}
+
+#[cfg(not(unix))]
+fn set_perm(_path: &Path, _perm: u32) -> io::Result<()> {
+    Ok(())
+}
+
+#[cfg(unix)]
+fn symlink(linkname: &Path, path: &Path) -> io::Result<()> {
+    std::os::unix::fs::symlink(linkname, path)
+}
+
+#[cfg(not(unix))]
+fn symlink(_linkname: &Path, _path: &Path) -> io::Result<()> {
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "symlinks are not supported on this platform yet",
+    ))
 }
 
 fn metadata(meta: &std::fs::Metadata) -> Metadata {

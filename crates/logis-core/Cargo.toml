@@ -16,7 +16,8 @@ workspace = true
 globset = { version = "0.4.22", default-features = false }
 # The process umask (`system::process_umask`), without unsafe code.
 rustix = { version = "1.1.6", features = ["fs", "process"] }
+# Atomic writes in `RealSystem`: a temporary file or symlink renamed into place.
+tempfile = "3.27.0"
 
 [dev-dependencies]
 proptest = "1.12.0"
-tempfile = "3.27.0"
