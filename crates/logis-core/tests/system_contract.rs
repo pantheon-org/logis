@@ -96,6 +96,20 @@ fn read_dir_of_missing_path_is_not_found() {
     });
 }
 
+/// Exact directories rely on this to tell "a file is in the way" from other errors.
+#[test]
+fn read_dir_of_a_file_is_not_a_directory() {
+    both(|sys, root| {
+        for path in ["dir/file", "dir/link"] {
+            assert_eq!(
+                sys.read_dir(&root.join(path)).unwrap_err().kind(),
+                ErrorKind::NotADirectory,
+                "{path}"
+            );
+        }
+    });
+}
+
 #[test]
 fn lstat_reports_types_and_modes_without_following_symlinks() {
     both(|sys, root| {

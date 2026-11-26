@@ -148,10 +148,10 @@ impl System for MemSystem {
     fn read_dir(&self, path: &Path) -> io::Result<Vec<OsString>> {
         let real = self.resolve(path, true)?;
         if !matches!(self.nodes.get(&real), Some(Node::Dir { .. })) {
-            return Err(io::Error::other(format!(
-                "{}: not a directory",
-                path.display()
-            )));
+            return Err(io::Error::new(
+                io::ErrorKind::NotADirectory,
+                format!("{}: not a directory", path.display()),
+            ));
         }
         // BTreeMap order gives children in sorted order.
         Ok(self
