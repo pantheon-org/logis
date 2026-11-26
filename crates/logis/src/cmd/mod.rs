@@ -1,5 +1,6 @@
 //! One module per command. Commands are added only when a BDD scenario for them is red.
 
+mod cat;
 mod dirs;
 mod managed;
 
@@ -25,6 +26,8 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Print the target state of files, scripts and symlinks.
+    Cat(cat::Args),
     /// List the targets the source state manages.
     Managed(managed::Args),
 }
@@ -33,6 +36,7 @@ enum Command {
 pub fn run(cli: Cli) -> Result<(), String> {
     let dirs = dirs::Dirs::resolve(cli.source, cli.destination)?;
     match cli.command {
+        Some(Command::Cat(args)) => cat::run(&dirs, &args),
         Some(Command::Managed(args)) => managed::run(&dirs, &args),
         None => Ok(()),
     }

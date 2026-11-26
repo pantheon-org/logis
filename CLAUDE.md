@@ -27,8 +27,9 @@ in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.
   - `src/special.rs`: the special file names. `src/pattern_set.rs`: ignore patterns.
   - `src/entry_type.rs`: `--include`/`--exclude` types.
   - `src/managed.rs`: the `managed` query.
+  - `src/target_state.rs`: what each source entry says its target should be.
   - In the tests, ports of chezmoi's Go tests keep the Go test names.
-- `crates/logis/src/cmd/`: commands, currently only `managed`. `dirs.rs` resolves `--source`,
+- `crates/logis/src/cmd/`: commands, currently `cat` and `managed`. `dirs.rs` resolves `--source`,
   `--destination` and target arguments.
 - `crates/logis-config`: Pkl loading. `pkl/Logis.pkl` is the schema.
 - `crates/logis-template`: the minijinja engine.

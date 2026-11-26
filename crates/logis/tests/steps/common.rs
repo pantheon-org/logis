@@ -10,9 +10,14 @@ use cucumber::{given, then, when};
 
 use super::{LogisWorld, Tool};
 
+/// The sandbox lives under the canonical temp directory (on macOS `/var` is a symlink to
+/// `/private/var`), so the tools' working directory and the destination agree on one path.
 #[given("an empty home directory")]
 fn empty_home(world: &mut LogisWorld) {
-    let dir = tempfile::tempdir().expect("create sandbox");
+    let tmp = std::env::temp_dir()
+        .canonicalize()
+        .expect("canonical temp dir");
+    let dir = tempfile::tempdir_in(tmp).expect("create sandbox");
     for sub in [
         "home",
         "source",
@@ -29,21 +34,35 @@ fn empty_home(world: &mut LogisWorld) {
 }
 
 fn run_tool(world: &mut LogisWorld, args: &str) {
+    run_tool_in(world, args, None);
+}
+
+/// Run the tool with `args`, in `cwd` if given, else in the sandbox home.
+fn run_tool_in(world: &mut LogisWorld, args: &str, cwd: Option<std::path::PathBuf>) {
     let args: Vec<String> = args
         .split_whitespace()
         .map(|a| world.expand_arg(a))
         .collect();
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
-    let output = Tool::from_env()
-        .command(world.root(), &args)
-        .output()
-        .expect("run tool");
+    let mut cmd = Tool::from_env().command(world.root(), &args);
+    if let Some(cwd) = cwd {
+        cmd.current_dir(cwd);
+    }
+    let output = cmd.output().expect("run tool");
     world.last = Some(output);
 }
 
 #[when(expr = "I run {string}")]
 fn run(world: &mut LogisWorld, args: String) {
     run_tool(world, &args);
+}
+
+/// Run the tool from directory `dir` (a `~/...` target path), so relative arguments resolve
+/// against it.
+#[when(expr = "I run {string} in {string}")]
+fn run_in(world: &mut LogisWorld, args: String, dir: String) {
+    let cwd = world.target(&dir);
+    run_tool_in(world, &args, Some(cwd));
 }
 
 /// Setup that runs the tool, for example `Given I have run "apply --force"`. Fails the scenario
