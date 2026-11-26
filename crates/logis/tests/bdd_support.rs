@@ -10,6 +10,7 @@ fn kinds_parse_from_feature_words() {
     assert_eq!("file".parse(), Ok(Kind::File));
     assert_eq!("exact".parse(), Ok(Kind::ExactDirectory));
     assert_eq!("script".parse(), Ok(Kind::Script));
+    assert_eq!("remove".parse(), Ok(Kind::Remove));
     assert_eq!("once-script".parse(), Ok(Kind::OnceScript));
     assert!("bogus".parse::<Kind>().is_err());
 }
@@ -34,6 +35,7 @@ fn encodes_dot_and_kind_prefixes() {
     assert_eq!(encode(".empty", Kind::Empty), "empty_dot_empty");
     assert_eq!(encode(".symlink", Kind::Symlink), "symlink_dot_symlink");
     assert_eq!(encode(".create", Kind::Create), "create_dot_create");
+    assert_eq!(encode(".gone", Kind::Remove), "remove_dot_gone");
     assert_eq!(encode(".dir", Kind::Directory), "dot_dir");
     assert_eq!(encode("subdir", Kind::ExactDirectory), "exact_subdir");
     assert_eq!(encode("script", Kind::Script), "run_script");
@@ -60,6 +62,7 @@ fn decode_inverts_encode() {
         Kind::Empty,
         Kind::Symlink,
         Kind::Create,
+        Kind::Remove,
         Kind::Script,
         Kind::OnceScript,
         Kind::Directory,

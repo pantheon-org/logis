@@ -1,7 +1,6 @@
 # Seeded by `cargo xtask txtar2feature` from chezmoi internal/cmd/testdata/scripts/apply.txtar,
 # then specified by hand. The fixture mirrors chezmoi's `mksourcedir` without the template,
 # readonly and remove entries.
-@wip
 Feature: apply
   apply makes the home directory match the source state.
 

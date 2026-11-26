@@ -58,6 +58,26 @@ impl Dirs {
     }
 }
 
+impl Dirs {
+    /// The source path of a command-line argument, `/`-separated and relative to the source
+    /// directory (for `--source-path`).
+    pub fn source_rel(&self, arg: &Path) -> Result<String, String> {
+        let path = absolute(&self.cwd, arg);
+        let rel = path.strip_prefix(&self.source).map_err(|_| {
+            format!(
+                "{}: not in source directory ({})",
+                path.display(),
+                self.source.display()
+            )
+        })?;
+        Ok(rel
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .collect::<Vec<_>>()
+            .join("/"))
+    }
+}
+
 /// `path` made absolute against `cwd`, with `.` and `..` resolved lexically.
 fn absolute(cwd: &Path, path: &Path) -> PathBuf {
     let mut out = PathBuf::new();
@@ -83,6 +103,18 @@ mod tests {
             destination: "/home/u".into(),
             cwd: "/home/u/work".into(),
         }
+    }
+
+    #[test]
+    fn source_paths_are_relative_to_the_source_directory() {
+        assert_eq!(
+            dirs().source_rel(Path::new("/home/u/.local/share/logis/dot_dir/file")),
+            Ok("dot_dir/file".into())
+        );
+        assert_eq!(
+            dirs().source_rel(Path::new("/home/u/.file")),
+            Err("/home/u/.file: not in source directory (/home/u/.local/share/logis)".into())
+        );
     }
 
     #[test]

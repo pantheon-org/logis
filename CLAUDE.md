@@ -18,8 +18,9 @@ in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.
     `mise run spec:seed`. Specify a scenario by writing its steps and removing its `@skeleton` tag.
 - `crates/xtask`: developer tasks (`cargo xtask txtar2feature`). Not shipped.
 - `crates/logis-core`: the engine.
-  - `src/system/`: the `System` trait (`port.rs`), `RealSystem` (`real.rs`) and `MemSystem`
-    (`mem.rs`, in memory, for tests). `tests/system_contract.rs` checks both behave the same.
+  - `src/system/`: the `System` trait (`port.rs`), `RealSystem` (`real.rs`), `MemSystem`
+    (`mem.rs`, in memory, for tests) and `DryRunSystem` (`dry_run.rs`, drops writes).
+    `tests/system_contract*.rs` check that the real and in-memory systems behave the same.
   - `src/source_name/`: the source-name grammar (ADR-007).
   - `src/source_state/`: reading the source directory, including the absent entries of exact
     directories. Of the special files (ADR-008), only the ignore file and the scripts directory
@@ -28,8 +29,9 @@ in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.
   - `src/entry_type.rs`: `--include`/`--exclude` types.
   - `src/managed.rs`: the `managed` query.
   - `src/target_state.rs`: what each source entry says its target should be.
+  - `src/apply/`: making the destination match the target state.
   - In the tests, ports of chezmoi's Go tests keep the Go test names.
-- `crates/logis/src/cmd/`: commands, currently `cat` and `managed`. `dirs.rs` resolves `--source`,
+- `crates/logis/src/cmd/`: commands, currently `apply`, `cat` and `managed`. `dirs.rs` resolves `--source`,
   `--destination` and target arguments.
 - `crates/logis-config`: Pkl loading. `pkl/Logis.pkl` is the schema.
 - `crates/logis-template`: the minijinja engine.
