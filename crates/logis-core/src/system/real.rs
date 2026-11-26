@@ -17,7 +17,12 @@ pub fn process_umask() -> u32 {
         use rustix::process::umask;
         let current = umask(Mode::empty());
         umask(current);
-        u32::from(current.bits())
+        #[allow(
+            clippy::useless_conversion,
+            reason = "mode_t is u16 on macOS but u32 on Linux"
+        )]
+        let bits = u32::from(current.bits());
+        bits
     }
     #[cfg(not(unix))]
     {
