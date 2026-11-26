@@ -41,12 +41,19 @@ impl Tool {
         }
     }
 
-    /// The source-state file that lists ignored targets.
+    /// The source-state file that lists ignored targets (ADR-008).
     pub fn ignore_file_name(self) -> &'static str {
         match self {
             Self::Chezmoi => ".chezmoiignore",
-            // Proposed (not yet an ADR): `.logis*` special files.
             Self::Logis => ".logisignore",
+        }
+    }
+
+    /// The source-state directory whose scripts are not tied to a target directory (ADR-008).
+    pub fn scripts_dir_name(self) -> &'static str {
+        match self {
+            Self::Chezmoi => ".chezmoiscripts",
+            Self::Logis => ".logisscripts",
         }
     }
 

@@ -12,6 +12,8 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+# Ignore and remove patterns, with doublestar semantics (`*` stays in one path component).
+globset = { version = "0.4.22", default-features = false }
 
 [dev-dependencies]
 proptest = "1.12.0"

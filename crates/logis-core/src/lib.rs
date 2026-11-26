@@ -6,6 +6,8 @@
 
 pub mod entry_type;
 pub mod managed;
+pub mod pattern_set;
 pub mod source_name;
 pub mod source_state;
+pub mod special;
 pub mod system;

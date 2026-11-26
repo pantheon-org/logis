@@ -74,6 +74,73 @@ fn source_ignores(world: &mut LogisWorld, pattern: String) {
     fs::write(path, contents).expect("write ignore file");
 }
 
+/// The whole ignore file at the top of the source directory.
+#[given("the ignore file contains:")]
+fn ignore_file_contains(world: &mut LogisWorld, step: &Step) {
+    let path = world.source_dir().join(Tool::from_env().ignore_file_name());
+    fs::write(path, docstring(step)).expect("write ignore file");
+}
+
+/// The whole ignore file in the source directory of target directory `dir`, which must
+/// already be in the source state.
+#[given(expr = "the ignore file in {string} contains:")]
+fn ignore_file_in_contains(world: &mut LogisWorld, dir: String, step: &Step) {
+    let source_dir = world
+        .find_source(&dir)
+        .unwrap_or_else(|| panic!("{dir} is not in the source state"));
+    let path = source_dir.join(Tool::from_env().ignore_file_name());
+    fs::write(path, docstring(step)).expect("write ignore file");
+}
+
+/// A table of `| path | kind | contents |` for the tool's scripts directory. Paths are
+/// relative to that directory; only the last component is encoded by kind.
+#[given("the scripts directory contains:")]
+fn scripts_dir_contains(world: &mut LogisWorld, step: &Step) {
+    let scripts_dir = world.source_dir().join(Tool::from_env().scripts_dir_name());
+    let table = step.table.as_ref().expect("a table");
+    for row in table.rows.iter().skip(1) {
+        let kind = kind(&row[1]);
+        let (parent, name) = row[0].rsplit_once('/').unwrap_or(("", &row[0]));
+        let dir = scripts_dir.join(parent);
+        fs::create_dir_all(&dir).expect("create scripts dir");
+        let contents = row.get(2).map_or("", String::as_str);
+        fs::write(
+            dir.join(super::source_names::encode(name, kind)),
+            source_contents(kind, contents),
+        )
+        .expect("write script");
+    }
+}
+
+/// The tool's ignore file, empty, inside its scripts directory, where special files are not
+/// allowed.
+#[given("the scripts directory contains an ignore file")]
+fn scripts_dir_contains_ignore_file(world: &mut LogisWorld) {
+    let tool = Tool::from_env();
+    let scripts_dir = world.source_dir().join(tool.scripts_dir_name());
+    fs::create_dir_all(&scripts_dir).expect("create scripts dir");
+    fs::write(scripts_dir.join(tool.ignore_file_name()), "").expect("write ignore file");
+}
+
+/// A file whose name starts with `.` in the tool's scripts directory: skipped, like hidden files
+/// elsewhere in the source directory.
+#[given(expr = "the scripts directory contains a hidden file {string}")]
+fn scripts_dir_hidden_file(world: &mut LogisWorld, name: String) {
+    assert!(
+        name.starts_with('.') && !name.contains('/'),
+        "hidden file names start with . and have no /: {name:?}"
+    );
+    let scripts_dir = world.source_dir().join(Tool::from_env().scripts_dir_name());
+    fs::create_dir_all(&scripts_dir).expect("create scripts dir");
+    fs::write(scripts_dir.join(name), "").expect("write hidden file");
+}
+
+/// A docstring's text with a final newline, as a file's contents.
+fn docstring(step: &Step) -> String {
+    let body = step.docstring.as_ref().expect("a docstring");
+    format!("{}\n", body.trim_start_matches('\n').trim_end_matches('\n'))
+}
+
 #[then(expr = "the source state manages {string} as a(n) {word}")]
 fn manages_as(world: &mut LogisWorld, target: String, kind_word: String) {
     let kind = kind(&kind_word);

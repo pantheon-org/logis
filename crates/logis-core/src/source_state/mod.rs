@@ -2,16 +2,20 @@
 //! attributes that describe it.
 //!
 //! Ported from chezmoi's `SourceState.Read` (`internal/chezmoi/sourcestate.go`), one concern
-//! at a time instead of one function: walking the tree (`read.rs`), and finding targets with
-//! more than one source entry (`SourceState::from_candidates`). Not yet supported: special
-//! files (ignore, remove, data, templates, externals, scripts directory, version), which are
+//! at a time instead of one function: walking the tree (`read.rs`), the ignore file's lines
+//! (`patterns.rs`), the scripts directory (`scripts.rs`), and dropping ignored targets and
+//! finding targets with more than one source entry (`SourceState::from_walk`). Not yet
+//! supported: the remove file, data, templates, externals and the version file, which are
 //! skipped like any other name starting with `.`.
 
 mod entry;
 mod error;
+mod patterns;
 mod read;
+mod scripts;
+mod walk_util;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use crate::system::{FileType, System};
@@ -24,6 +28,7 @@ pub use error::ReadError;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SourceState {
     entries: BTreeMap<String, SourceEntry>,
+    ignored: BTreeSet<String>,
 }
 
 impl SourceState {
@@ -42,15 +47,22 @@ impl SourceState {
             }
             Ok(_) => {}
         }
-        Self::from_candidates(read::walk(system, source_dir)?)
+        Self::from_walk(read::walk(system, source_dir)?)
     }
 
-    /// Build the state from every candidate entry. A target with more than one source entry is
-    /// an inconsistent state; all such targets are reported together, as chezmoi does.
-    fn from_candidates(candidates: Vec<(String, SourceEntry)>) -> Result<Self, ReadError> {
+    /// Build the state from what the walk found. Ignored targets are dropped first, so they
+    /// cannot conflict. A target with more than one source entry is an inconsistent state; all
+    /// such targets are reported together, as chezmoi does.
+    fn from_walk(mut walk: read::Walk) -> Result<Self, ReadError> {
+        let found = std::mem::take(&mut walk.found);
+        let mut ignored = std::mem::take(&mut walk.ignored);
         let mut by_target: BTreeMap<String, Vec<SourceEntry>> = BTreeMap::new();
-        for (target, entry) in candidates {
-            by_target.entry(target).or_default().push(entry);
+        for (target, entry) in found {
+            if walk.is_ignored(&target) {
+                ignored.insert(target);
+            } else {
+                by_target.entry(target).or_default().push(entry);
+            }
         }
         let inconsistent: Vec<(String, Vec<String>)> = by_target
             .iter()
@@ -71,7 +83,14 @@ impl SourceState {
             .into_iter()
             .filter_map(|(target, mut entries)| entries.pop().map(|entry| (target, entry)))
             .collect();
-        Ok(Self { entries })
+        Ok(Self { entries, ignored })
+    }
+
+    /// Targets the source state has entries or ignore patterns for but does not manage
+    /// because they are ignored, in target-path order. The contents of an ignored directory
+    /// are not read, so they are not listed.
+    pub fn ignored(&self) -> impl Iterator<Item = &str> {
+        self.ignored.iter().map(String::as_str)
     }
 
     pub fn entries(&self) -> impl Iterator<Item = (&str, &SourceEntry)> {

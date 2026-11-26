@@ -75,6 +75,16 @@ impl LogisWorld {
         self.last.as_ref().expect("a command must have run")
     }
 
+    /// Replace the placeholders in expected output: `{home}` and `{source}` are the sandbox
+    /// directories, and `{scripts-dir}` and `{ignore-file}` are the tool's special names.
+    pub fn expand_placeholders(&self, text: &str) -> String {
+        let tool = Tool::from_env();
+        text.replace("{home}", &self.home().display().to_string())
+            .replace("{source}", &self.source_dir().display().to_string())
+            .replace("{scripts-dir}", tool.scripts_dir_name())
+            .replace("{ignore-file}", tool.ignore_file_name())
+    }
+
     /// Replace `~/` with the sandbox home in a command-line argument.
     pub fn expand_arg(&self, arg: &str) -> String {
         if let Some(inner) = arg

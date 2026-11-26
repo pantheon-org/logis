@@ -85,10 +85,11 @@ fn output_names_tool(world: &mut LogisWorld) {
     );
 }
 
-/// stderr contains `text`; `~/...` is expanded to the sandbox path, as in command arguments.
+/// stderr contains `text`; `~/...` is expanded to the sandbox path, as in command arguments,
+/// and the placeholders as in "the output is:".
 #[then(expr = "the error output mentions {string}")]
 fn error_mentions(world: &mut LogisWorld, text: String) {
-    let text = world.expand_arg(&text);
+    let text = world.expand_placeholders(&world.expand_arg(&text));
     let stderr = String::from_utf8_lossy(&world.last_output().stderr);
     assert!(
         stderr.contains(&text),
@@ -102,8 +103,7 @@ fn output_is_empty(world: &mut LogisWorld) {
     assert!(out.stdout.is_empty(), "{}", describe(out));
 }
 
-/// Exact stdout. `{home}` and `{source}` in the expected text stand for the sandbox home and
-/// source directories.
+/// Exact stdout, with the placeholders of `LogisWorld::expand_placeholders`.
 ///
 /// Gherkin strips the indentation shared by all docstring lines, so output whose lines all start
 /// with a space (such as `status`) is written with a `|` margin: if every line starts with `|`,
@@ -123,9 +123,7 @@ fn output_is(world: &mut LogisWorld, step: &Step) {
         .collect::<Vec<_>>()
         .join("\n");
     expected.push('\n');
-    let expected = expected
-        .replace("{home}", &world.home().display().to_string())
-        .replace("{source}", &world.source_dir().display().to_string());
+    let expected = world.expand_placeholders(&expected);
     let actual = String::from_utf8_lossy(&world.last_output().stdout);
     assert_eq!(actual, expected, "{}", describe(world.last_output()));
 }

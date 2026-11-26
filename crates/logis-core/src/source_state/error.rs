@@ -3,6 +3,7 @@ use std::io;
 use std::path::PathBuf;
 
 use crate::source_name::ParseError;
+use crate::special::SCRIPTS_DIR;
 
 /// Why the source state could not be read. Messages match chezmoi's where it has one.
 #[derive(Debug)]
@@ -16,6 +17,16 @@ pub enum ReadError {
     InvalidName(ParseError),
     NonUtf8Name(PathBuf),
     UnsupportedFileType(PathBuf),
+    /// A line of a pattern file (the ignore file) that is not a valid pattern.
+    Pattern {
+        path: PathBuf,
+        line: usize,
+        message: String,
+    },
+    /// A file in the scripts directory that is not a script.
+    NotAScript(PathBuf),
+    /// A special file inside the scripts directory.
+    NotAllowedInScriptsDir(PathBuf),
     /// Targets with more than one source entry: each target with its sorted source paths.
     Inconsistent(Vec<(String, Vec<String>)>),
 }
@@ -30,6 +41,17 @@ impl fmt::Display for ReadError {
             Self::UnsupportedFileType(path) => {
                 write!(f, "{}: unsupported file type", path.display())
             }
+            Self::Pattern {
+                path,
+                line,
+                message,
+            } => write!(f, "{}:{line}: {message}", path.display()),
+            Self::NotAScript(path) => write!(f, "{}: not a script", path.display()),
+            Self::NotAllowedInScriptsDir(path) => write!(
+                f,
+                "{}: not allowed in {SCRIPTS_DIR} directory",
+                path.display()
+            ),
             Self::Inconsistent(targets) => {
                 let lines: Vec<String> = targets
                     .iter()

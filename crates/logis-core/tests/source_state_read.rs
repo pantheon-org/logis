@@ -1,7 +1,6 @@
 //! Port of the in-scope cases of chezmoi's `TestSourceStateRead`
 //! (`internal/chezmoi/sourcestate_test.go`), on an in-memory filesystem. Case names are the Go
-//! names; extra cases say where they come from. Out of scope for now: .chezmoiignore,
-//! .chezmoiremove, externals, .chezmoitemplates, templates and .chezmoiversion.
+//! names; extra cases say where they come from. Special files are in `source_state_special.rs`.
 
 use std::path::Path;
 

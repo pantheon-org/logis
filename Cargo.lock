@@ -911,6 +911,7 @@ version = "0.0.0"
 name = "logis-core"
 version = "0.0.0"
 dependencies = [
+ "globset",
  "proptest",
  "tempfile",
 ]

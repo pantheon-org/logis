@@ -17,6 +17,7 @@ pub enum Kind {
     Symlink,
     Create,
     Script,
+    OnceScript,
     Directory,
     ExactDirectory,
 }
@@ -33,6 +34,7 @@ impl FromStr for Kind {
             "symlink" => Self::Symlink,
             "create" => Self::Create,
             "script" => Self::Script,
+            "once-script" => Self::OnceScript,
             "directory" => Self::Directory,
             "exact" => Self::ExactDirectory,
             other => return Err(format!("unknown kind {other:?}")),
@@ -55,6 +57,7 @@ impl Kind {
             Self::Symlink => "symlink_",
             Self::Create => "create_",
             Self::Script => "run_",
+            Self::OnceScript => "run_once_",
             Self::ExactDirectory => "exact_",
         }
     }

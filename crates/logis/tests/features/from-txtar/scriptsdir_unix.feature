@@ -41,3 +41,57 @@ Feature: scriptsdir_unix
   Scenario: apply fails if .chezmoiscripts contains any .chezmoi* files
     # ! exec chezmoi apply
     # stderr 'not allowed in \.chezmoiscripts directory'
+
+  # Not from the txtar script: the scenarios above through managed, which needs no apply.
+  Scenario: managed lists the scripts in the scripts directory under it
+    Given an empty home directory
+    And the scripts directory contains:
+      | path             | kind        | contents  |
+      | script.sh        | script      | #!/bin/sh |
+      | subdir/script.sh | once-script | #!/bin/sh |
+    When I run "managed --include scripts"
+    Then it succeeds
+    And the output is:
+      """
+      {scripts-dir}/script.sh
+      {scripts-dir}/subdir/script.sh
+      """
+
+  Scenario: managed fails if the scripts directory contains a non-script
+    Given an empty home directory
+    And the scripts directory contains:
+      | path | kind | contents |
+      | file | file |          |
+    When I run "managed"
+    Then it fails
+    And the error output mentions "{source}/{scripts-dir}/file: not a script"
+
+  Scenario: managed fails if the scripts directory contains duplicate targets
+    Given an empty home directory
+    And the scripts directory contains:
+      | path      | kind        | contents  |
+      | script.sh | script      | #!/bin/sh |
+      | script.sh | once-script | #!/bin/sh |
+    When I run "managed"
+    Then it fails
+    And the error output mentions "{scripts-dir}/script.sh: inconsistent state"
+
+  Scenario: managed fails if the scripts directory contains a special file
+    Given an empty home directory
+    And the scripts directory contains an ignore file
+    When I run "managed"
+    Then it fails
+    And the error output mentions "{source}/{scripts-dir}/{ignore-file}: not allowed in {scripts-dir} directory"
+
+  Scenario: managed skips hidden files in the scripts directory
+    Given an empty home directory
+    And the scripts directory contains:
+      | path      | kind   | contents  |
+      | script.sh | script | #!/bin/sh |
+    And the scripts directory contains a hidden file ".ignore"
+    When I run "managed"
+    Then it succeeds
+    And the output is:
+      """
+      {scripts-dir}/script.sh
+      """
