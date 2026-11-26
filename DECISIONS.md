@@ -106,6 +106,23 @@ divergence from chezmoi always gets an entry, plus tagged BDD scenarios.
 - Until templates arrive (phase 4), logis reads `.logisignore` and `.logisremove` as plain
   text. chezmoi always runs them as templates. This is a gap, not a divergence.
 
+## ADR-009: `apply` needs `--force` until logis records what it wrote
+
+- Status: accepted (2026-11-26), temporary
+- chezmoi decides whether to prompt before overwriting a target from the entry state it
+  recorded when it last wrote it. A target that changed since then is a conflict. A target
+  with no record is overwritten without asking, as on a first apply.
+- logis has no state store yet (redb is still proposed), so every apply would be a first
+  apply: a target the user edited after the last apply would be overwritten silently.
+- Divergence: until the state store exists, `logis apply` without `--force` fails before
+  changing anything, with an error that names `--force`. `--dry-run` changes nothing, so it
+  does not need `--force`.
+- Specified by: "apply without --force overwrites a target it never wrote" (`@chezmoi-only`)
+  and "apply without --force refuses and changes nothing" (`@logis-only`) in
+  `crates/logis/tests/features/apply-entries.feature`.
+- Revisit when the state store lands: logis should then prompt as chezmoi does, and this ADR
+  is superseded.
+
 ## Open (proposed)
 
 - `redb` for persistent state, in place of chezmoi's bolt.
