@@ -78,8 +78,36 @@ divergence from chezmoi always gets an entry, plus tagged BDD scenarios.
   `crates/logis/tests/features/from-txtar/add.feature`: "...manages different targets"
   (`@chezmoi-only`) and "...manages the same targets" (`@logis-only`).
 
+## ADR-008: `.logis*` special files
+
+- Status: accepted (2026-11-26)
+- logis's special files in the source directory use the prefix `.logis` where chezmoi uses
+  `.chezmoi`, with the same suffixes and the same meaning:
+
+  | logis | chezmoi |
+  | --- | --- |
+  | `.logisignore` | `.chezmoiignore` |
+  | `.logisremove` | `.chezmoiremove` |
+  | `.logisscripts/` | `.chezmoiscripts/` |
+  | `.logisversion` | `.chezmoiversion` |
+  | `.logisdata.<format>`, `.logisdata/` | `.chezmoidata.<format>`, `.chezmoidata/` |
+  | `.logistemplates/` | `.chezmoitemplates/` |
+  | `.logisexternal.<format>`, `.logisexternals/` | `.chezmoiexternal.<format>`, `.chezmoiexternals/` |
+  | `.logisroot` | `.chezmoiroot` |
+
+- Why: logis must not reuse chezmoi's names (ADR-001), and a one-to-one rename keeps chezmoi's
+  documentation and a future `logis migrate` simple.
+- Like any other name starting with `.`, chezmoi's `.chezmoi*` files are not part of a logis
+  source state. logis ignores them; it does not report them as errors.
+- The names live in `logis_core::special` and, for the BDD steps, in
+  `crates/logis/tests/steps/adapter.rs`.
+- Not yet decided: the data formats (`.pkl` alongside or instead of JSON, TOML and YAML) and the
+  template suffix (phase 3 and phase 4).
+- Until templates arrive (phase 4), logis reads `.logisignore` and `.logisremove` as plain
+  text. chezmoi always runs them as templates. This is a gap, not a divergence.
+
 ## Open (proposed)
 
 - `redb` for persistent state, in place of chezmoi's bolt.
-- `.logis*` special files; `~/.config/logis/` and `~/.local/share/logis/` locations.
+- `~/.config/logis/` and `~/.local/share/logis/` locations.
 - Platforms: macOS and Linux first, Windows later.
