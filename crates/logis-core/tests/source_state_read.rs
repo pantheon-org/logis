@@ -15,7 +15,7 @@ fn source(rel: &str) -> String {
 }
 
 fn read(system: &MemSystem) -> Result<SourceState, ReadError> {
-    SourceState::read(system, Path::new(SOURCE))
+    SourceState::read(system, Path::new(SOURCE), Path::new("/home/user"))
 }
 
 /// The state's targets with a short description of each entry.

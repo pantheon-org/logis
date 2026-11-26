@@ -108,11 +108,11 @@ fn change_mode(world: &mut LogisWorld, target: String, mode: String) {
     set_mode(&world.target(&target), mode);
 }
 
+/// Replace the entry at `target`, a file, symlink or directory, with a regular file.
 #[when(expr = "I replace {string} with a file containing {string}")]
 fn replace_with_file(world: &mut LogisWorld, target: String, contents: String) {
-    let path = world.target(&target);
-    fs::remove_file(&path).expect("remove existing entry");
-    write_file(&path, &line(&contents), 0o644);
+    remove(world, target.clone());
+    write_file(&world.target(&target), &line(&contents), 0o644);
 }
 
 #[when(expr = "I create a symlink {string} to {string}")]

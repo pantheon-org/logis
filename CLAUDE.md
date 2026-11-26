@@ -21,8 +21,9 @@ in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.
   - `src/system/`: the `System` trait (`port.rs`), `RealSystem` (`real.rs`) and `MemSystem`
     (`mem.rs`, in memory, for tests). `tests/system_contract.rs` checks both behave the same.
   - `src/source_name/`: the source-name grammar (ADR-007).
-  - `src/source_state/`: reading the source directory. Of the special files (ADR-008), only the
-    ignore file and the scripts directory are supported so far.
+  - `src/source_state/`: reading the source directory, including the absent entries of exact
+    directories. Of the special files (ADR-008), only the ignore file and the scripts directory
+    are supported so far.
   - `src/special.rs`: the special file names. `src/pattern_set.rs`: ignore patterns.
   - `src/entry_type.rs`: `--include`/`--exclude` types.
   - `src/managed.rs`: the `managed` query.

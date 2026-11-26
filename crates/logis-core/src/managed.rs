@@ -42,6 +42,7 @@ pub struct Query<'a> {
     /// each selects itself and its descendants, and targets that are not managed are ignored.
     pub targets: &'a [&'a str],
     pub style: PathStyle,
+    pub source_dir: &'a Path,
     pub dest_dir: &'a Path,
 }
 
@@ -55,11 +56,21 @@ pub fn managed(state: &SourceState, query: &Query<'_>) -> Vec<String> {
             PathStyle::Relative => target.to_owned(),
             PathStyle::Absolute => query.dest_dir.join(target).display().to_string(),
             PathStyle::SourceRelative => entry.source_rel().to_owned(),
-            PathStyle::SourceAbsolute => entry.source_path().display().to_string(),
+            PathStyle::SourceAbsolute => source_absolute(query.source_dir, entry.source_rel()),
         })
         .collect();
     lines.sort();
     lines
+}
+
+/// The source directory joined with `source_rel`, as chezmoi's `AbsPath.Join`: an empty
+/// relative path (an absent entry's) is the source directory itself.
+fn source_absolute(source_dir: &Path, source_rel: &str) -> String {
+    if source_rel.is_empty() {
+        source_dir.display().to_string()
+    } else {
+        source_dir.join(source_rel).display().to_string()
+    }
 }
 
 /// Whether `target` is one of `targets` or below one. No targets, or an empty target (the

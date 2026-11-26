@@ -17,7 +17,7 @@ fn state() -> SourceState {
         .with_file("/src/dot_dir/exact_subdir/file", "", 0o644)
         .with_file("/src/symlink_dot_link", ".dir/file", 0o644)
         .with_file("/src/run_script", "", 0o644);
-    SourceState::read(&system, Path::new(SOURCE)).unwrap()
+    SourceState::read(&system, Path::new(SOURCE), Path::new(DEST)).unwrap()
 }
 
 fn query<'a>(targets: &'a [&'a str], style: PathStyle, filter: EntryTypeFilter) -> Query<'a> {
@@ -25,6 +25,7 @@ fn query<'a>(targets: &'a [&'a str], style: PathStyle, filter: EntryTypeFilter) 
         filter,
         targets,
         style,
+        source_dir: Path::new(SOURCE),
         dest_dir: Path::new(DEST),
     }
 }

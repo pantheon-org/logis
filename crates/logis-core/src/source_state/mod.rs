@@ -3,13 +3,15 @@
 //!
 //! Ported from chezmoi's `SourceState.Read` (`internal/chezmoi/sourcestate.go`), one concern
 //! at a time instead of one function: walking the tree (`read.rs`), the ignore file's lines
-//! (`patterns.rs`), the scripts directory (`scripts.rs`), and dropping ignored targets and
-//! finding targets with more than one source entry (`SourceState::from_walk`). Not yet
-//! supported: the remove file, data, templates, externals and the version file, which are
-//! skipped like any other name starting with `.`.
+//! (`patterns.rs`), the scripts directory (`scripts.rs`), dropping ignored targets and
+//! finding targets with more than one source entry (`SourceState::from_walk`), and the absent
+//! entries of exact directories (`exact.rs`). Not yet supported: the remove file, data,
+//! templates, externals and the version file, which are skipped like any other name starting
+//! with `.`.
 
 mod entry;
 mod error;
+mod exact;
 mod patterns;
 mod read;
 mod scripts;
@@ -18,6 +20,7 @@ mod walk_util;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use crate::pattern_set::{PatternMatch, PatternSet};
 use crate::system::{FileType, System};
 
 pub use entry::SourceEntry;
@@ -32,8 +35,13 @@ pub struct SourceState {
 }
 
 impl SourceState {
-    /// Read the source directory. A missing source directory is an empty source state.
-    pub fn read(system: &dyn System, source_dir: &Path) -> Result<Self, ReadError> {
+    /// Read the source directory. A missing source directory is an empty source state. The
+    /// destination directory is read only under exact directories, for their absent entries.
+    pub fn read(
+        system: &dyn System,
+        source_dir: &Path,
+        dest_dir: &Path,
+    ) -> Result<Self, ReadError> {
         match system.stat(source_dir) {
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Self::default()),
             Err(source) => {
@@ -47,18 +55,29 @@ impl SourceState {
             }
             Ok(_) => {}
         }
-        Self::from_walk(read::walk(system, source_dir)?)
+        let mut walk = read::walk(system, source_dir)?;
+        let ignore = std::mem::take(&mut walk.ignore);
+        let mut state = Self::from_walk(walk, &ignore)?;
+        let absents = exact::absents(
+            system,
+            dest_dir,
+            &state.entries,
+            &ignore,
+            &mut state.ignored,
+        )?;
+        state.entries.extend(absents);
+        Ok(state)
     }
 
     /// Build the state from what the walk found. Ignored targets are dropped first, so they
     /// cannot conflict. A target with more than one source entry is an inconsistent state; all
     /// such targets are reported together, as chezmoi does.
-    fn from_walk(mut walk: read::Walk) -> Result<Self, ReadError> {
+    fn from_walk(mut walk: read::Walk, ignore: &PatternSet) -> Result<Self, ReadError> {
         let found = std::mem::take(&mut walk.found);
         let mut ignored = std::mem::take(&mut walk.ignored);
         let mut by_target: BTreeMap<String, Vec<SourceEntry>> = BTreeMap::new();
         for (target, entry) in found {
-            if walk.is_ignored(&target) {
+            if ignore.matches(&target) == PatternMatch::Include {
                 ignored.insert(target);
             } else {
                 by_target.entry(target).or_default().push(entry);

@@ -29,7 +29,8 @@ pub struct Args {
 }
 
 pub fn run(dirs: &Dirs, args: &Args) -> Result<(), String> {
-    let state = SourceState::read(&RealSystem, &dirs.source).map_err(|e| e.to_string())?;
+    let state = SourceState::read(&RealSystem, &dirs.source, &dirs.destination)
+        .map_err(|e| e.to_string())?;
     let targets = args
         .targets
         .iter()
@@ -43,6 +44,7 @@ pub fn run(dirs: &Dirs, args: &Args) -> Result<(), String> {
         },
         targets: &targets,
         style: args.path_style,
+        source_dir: &dirs.source,
         dest_dir: &dirs.destination,
     };
     for line in managed(&state, &query) {

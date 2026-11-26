@@ -21,7 +21,7 @@ fn ignore_file(contents: &str) -> MemSystem {
 }
 
 fn read(system: &MemSystem) -> Result<SourceState, ReadError> {
-    SourceState::read(system, Path::new(SOURCE))
+    SourceState::read(system, Path::new(SOURCE), Path::new("/home/user"))
 }
 
 fn targets(state: &SourceState) -> Vec<&str> {

@@ -101,6 +101,7 @@ impl EntryTypeSet {
         match entry {
             SourceEntry::Dir { .. } => self.has(EntryType::Dirs),
             SourceEntry::File { attr, .. } => self.contains_file(attr),
+            SourceEntry::Absent { .. } => self.has(EntryType::Remove),
         }
     }
 
