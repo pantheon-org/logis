@@ -2,30 +2,24 @@
 //! and `Config.applyArgs` (`internal/chezmoi/sourcestate.go`, `internal/cmd/config.go`).
 //!
 //! What is in the destination now is read in `actual.rs`, and each kind of target is applied
-//! in `entry.rs`. Not supported yet: scripts (phase 5), recording what was written (the state
+//! in `entry.rs`. `status.rs` reports what apply would change, from the entry states in
+//! `entry_state.rs`. Not supported yet: scripts (phase 5), recording what was written (the state
 //! store), and removing empty `remove_` directories afterwards (`SourceState.PostApply`).
 
 mod actual;
 mod entry;
+mod entry_state;
 mod error;
+mod options;
+mod status;
 
-use std::path::Path;
-
-use crate::entry_type::EntryTypeFilter;
 use crate::source_state::SourceState;
 use crate::system::System;
 use crate::target_state::target_entry;
 
 pub use error::{ApplyError, TargetApplyError};
-
-#[derive(Debug, Clone, Copy)]
-pub struct ApplyOptions<'a> {
-    pub dest_dir: &'a Path,
-    /// Taken from the target permissions, as chezmoi does.
-    pub umask: u32,
-    /// Entries of other types are skipped.
-    pub filter: EntryTypeFilter,
-}
+pub use options::ApplyOptions;
+pub use status::{Status, status};
 
 /// Apply `targets` (paths relative to the destination directory), in the order given, which
 /// should be sorted so that directories come before their contents. Targets the source state

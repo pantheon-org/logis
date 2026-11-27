@@ -6,6 +6,7 @@ mod diff;
 mod dirs;
 mod globals;
 mod managed;
+mod status;
 mod targets;
 
 use std::path::PathBuf;
@@ -52,6 +53,8 @@ enum Command {
     Diff(diff::Args),
     /// List the targets the source state manages.
     Managed(managed::Args),
+    /// List what apply would change.
+    Status(status::Args),
 }
 
 /// Run the parsed command line. Errors are returned as the message to print.
@@ -70,6 +73,7 @@ pub fn run(cli: Cli) -> Result<(), String> {
         Some(Command::Cat(args)) => cat::run(&dirs, globals.umask, &args),
         Some(Command::Diff(args)) => diff::run(&dirs, globals, &args),
         Some(Command::Managed(args)) => managed::run(&dirs, &args),
+        Some(Command::Status(args)) => status::run(&dirs, globals, &args),
         None => Ok(()),
     }
 }

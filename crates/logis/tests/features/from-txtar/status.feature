@@ -1,7 +1,6 @@
 # Seeded by `cargo xtask txtar2feature` from chezmoi internal/cmd/testdata/scripts/status.txtar,
 # then specified by hand. The fixture mirrors chezmoi's `mksourcedir` without the template,
 # readonly and remove entries.
-@wip
 Feature: status
   status lists what apply would change, one line per target: two status columns (the
   destination's change since the last apply, then the change apply would make) and the path.
@@ -80,6 +79,9 @@ Feature: status
     Then it succeeds
     And the output is empty
 
+  # ADR-009: the first column needs the record of what apply wrote, which logis does not keep
+  # yet.
+  @chezmoi-only
   Scenario: status identifies files that have been modified in the destination directory
     Given I have run "apply --force"
     When I append "# edited" to "~/.file"
@@ -88,6 +90,17 @@ Feature: status
     And the output is:
       """
       |MM .file
+      """
+
+  @logis-only
+  Scenario: status identifies files that have been modified in the destination directory, and shows only the change apply would make
+    Given I have run "apply --force"
+    When I append "# edited" to "~/.file"
+    And I run "status"
+    Then it succeeds
+    And the output is:
+      """
+      | M .file
       """
 
   Scenario: status does not emit status for equivalent modifications
