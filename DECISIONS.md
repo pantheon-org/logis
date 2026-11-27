@@ -106,9 +106,9 @@ divergence from chezmoi always gets an entry, plus tagged BDD scenarios.
 - Until templates arrive (phase 4), logis reads `.logisignore` and `.logisremove` as plain
   text. chezmoi always runs them as templates. This is a gap, not a divergence.
 
-## ADR-009: `apply` needs `--force` until logis records what it wrote
+## ADR-009: Until logis records what it wrote, `apply` needs `--force` and `status` has one column
 
-- Status: accepted (2026-11-26), temporary
+- Status: accepted (2026-11-26), temporary; extended to `status` on 2026-11-27
 - chezmoi decides whether to prompt before overwriting a target from the entry state it
   recorded when it last wrote it. A target that changed since then is a conflict. A target
   with no record is overwritten without asking, as on a first apply.
@@ -120,8 +120,14 @@ divergence from chezmoi always gets an entry, plus tagged BDD scenarios.
 - Specified by: "apply without --force overwrites a target it never wrote" (`@chezmoi-only`)
   and "apply without --force refuses and changes nothing" (`@logis-only`) in
   `crates/logis/tests/features/apply-entries.feature`.
-- Revisit when the state store lands: logis should then prompt as chezmoi does, and this ADR
-  is superseded.
+- `status`: chezmoi's first column compares that same record with the destination (the
+  target changed since the last apply). Without a record, logis leaves the first column
+  blank and fills only the second (the change apply would make), as chezmoi does for a
+  target it has never written. Specified by "status identifies files that have been
+  modified in the destination directory" (`@chezmoi-only`) and "...shows only the change
+  apply would make" (`@logis-only`) in `crates/logis/tests/features/from-txtar/status.feature`.
+- Revisit when the state store lands: logis should then prompt as chezmoi does and fill both
+  status columns, and this ADR is superseded.
 
 ## Open (proposed)
 
