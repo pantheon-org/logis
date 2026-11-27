@@ -64,6 +64,19 @@ fn source_is_empty(world: &mut LogisWorld) {
     fs::create_dir_all(&dir).expect("recreate source");
 }
 
+/// Remove the source entry for `target` (and, for a directory, everything in it).
+#[given(expr = "{string} is removed from the source state")]
+fn removed_from_source(world: &mut LogisWorld, target: String) {
+    let path = world
+        .find_source(&target)
+        .unwrap_or_else(|| panic!("{target} is not in the source state"));
+    if path.is_dir() {
+        fs::remove_dir_all(&path).expect("remove source dir");
+    } else {
+        fs::remove_file(&path).expect("remove source file");
+    }
+}
+
 /// Targets matching `pattern` are ignored (the tool's ignore file).
 #[given(expr = "the source state ignores {string}")]
 fn source_ignores(world: &mut LogisWorld, pattern: String) {

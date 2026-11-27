@@ -222,3 +222,19 @@ fn with_ignore() {
         ]
     );
 }
+
+/// Not a Go case (`SourceState.Ignore`): the state answers for any target, read or not, so
+/// `unmanaged` can ask about destination entries.
+#[test]
+fn ignore_patterns_answer_for_any_target() {
+    let state = read(&ignore_file(".ign\n!.ign/keep\n**/*.bak\n")).unwrap();
+    assert!(state.is_ignored(".ign"));
+    assert!(state.is_ignored("dir/x.bak"));
+    assert!(!state.is_ignored(".ign/x"));
+    assert!(!state.is_ignored(".ign/keep"));
+    assert!(
+        !read(&MemSystem::new().with_dir(SOURCE, 0o755))
+            .unwrap()
+            .is_ignored("x")
+    );
+}

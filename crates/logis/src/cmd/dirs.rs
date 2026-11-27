@@ -59,6 +59,11 @@ impl Dirs {
 }
 
 impl Dirs {
+    /// A command-line argument as an absolute, normalized path (chezmoi's `NormalizePath`).
+    pub fn absolute(&self, arg: &Path) -> PathBuf {
+        absolute(&self.cwd, arg)
+    }
+
     /// The source path of a command-line argument, `/`-separated and relative to the source
     /// directory (for `--source-path`).
     pub fn source_rel(&self, arg: &Path) -> Result<String, String> {

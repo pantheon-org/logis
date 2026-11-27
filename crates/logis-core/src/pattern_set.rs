@@ -45,6 +45,15 @@ pub struct PatternSet {
     exclude: BTreeMap<String, GlobMatcher>,
 }
 
+/// Sets are equal when they hold the same patterns.
+impl PartialEq for PatternSet {
+    fn eq(&self, other: &Self) -> bool {
+        self.include.keys().eq(other.include.keys()) && self.exclude.keys().eq(other.exclude.keys())
+    }
+}
+
+impl Eq for PatternSet {}
+
 impl PatternSet {
     /// Add `pattern`. Adding a pattern that is already in the set changes nothing.
     pub fn add(&mut self, pattern: &str, include: Include) -> Result<(), InvalidPattern> {

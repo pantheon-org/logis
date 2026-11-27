@@ -32,6 +32,8 @@ pub use error::ReadError;
 pub struct SourceState {
     entries: BTreeMap<String, SourceEntry>,
     ignored: BTreeSet<String>,
+    /// The patterns of every ignore file.
+    ignore: PatternSet,
 }
 
 impl SourceState {
@@ -66,6 +68,7 @@ impl SourceState {
             &mut state.ignored,
         )?;
         state.entries.extend(absents);
+        state.ignore = ignore;
         Ok(state)
     }
 
@@ -102,7 +105,17 @@ impl SourceState {
             .into_iter()
             .filter_map(|(target, mut entries)| entries.pop().map(|entry| (target, entry)))
             .collect();
-        Ok(Self { entries, ignored })
+        Ok(Self {
+            entries,
+            ignored,
+            ignore: PatternSet::default(),
+        })
+    }
+
+    /// Whether the ignore files ignore `target`, managed or not (chezmoi's `SourceState.Ignore`).
+    #[must_use]
+    pub fn is_ignored(&self, target: &str) -> bool {
+        self.ignore.matches(target) == PatternMatch::Include
     }
 
     /// Targets the source state has entries or ignore patterns for but does not manage
