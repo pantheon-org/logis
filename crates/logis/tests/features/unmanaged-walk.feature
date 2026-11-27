@@ -104,8 +104,10 @@ Feature: unmanaged walk
         sub
       """
 
+  # A file, not a directory such as /etc: chezmoi walks into a directory outside the
+  # destination first, so what it reports depends on the machine.
   Scenario: unmanaged fails for a path outside the destination directory
-    When I run "unmanaged /etc"
+    When I run "unmanaged {source-of:~/.managed/known}"
     Then it fails
-    And the error output mentions "/etc: not in"
+    And the error output mentions "not in {home}"
     And the output is empty
