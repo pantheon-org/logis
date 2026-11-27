@@ -6,6 +6,7 @@
 
 mod adapter;
 mod common;
+mod contents;
 mod home;
 pub mod selection;
 mod source;

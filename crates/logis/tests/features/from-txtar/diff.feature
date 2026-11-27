@@ -1,7 +1,7 @@
 # Seeded by `cargo xtask txtar2feature` from chezmoi internal/cmd/testdata/scripts/diff.txtar,
 # then specified by hand. Expected output is chezmoi's golden output for unix with umask 022
 # (the adapter fixes the umask). Windows output differs in file modes, so this feature is @unix.
-@unix @wip
+@unix
 Feature: diff
   diff prints, as a git-style diff, the changes apply would make to the home directory.
 

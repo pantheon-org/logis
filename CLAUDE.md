@@ -30,8 +30,9 @@ in this repo (gitignored, its own git repo), plus the pinned `chezmoi` in `mise.
   - `src/managed.rs`: the `managed` query.
   - `src/target_state.rs`: what each source entry says its target should be.
   - `src/apply/`: making the destination match the target state.
+  - `src/diff/`: the git diff of what apply would change (`GitDiffSystem`).
   - In the tests, ports of chezmoi's Go tests keep the Go test names.
-- `crates/logis/src/cmd/`: commands, currently `apply`, `cat` and `managed`. `dirs.rs` resolves `--source`,
+- `crates/logis/src/cmd/`: commands, currently `apply`, `cat`, `diff` and `managed`. `dirs.rs` resolves `--source`,
   `--destination` and target arguments.
 - `crates/logis-config`: Pkl loading. `pkl/Logis.pkl` is the schema.
 - `crates/logis-template`: the minijinja engine.

@@ -20,7 +20,7 @@ fn set_mode(path: &Path, mode: u32) {
 
 /// Create `path` and any missing parents with mode 0755, whatever the caller's umask: the tool
 /// reads these modes (a 0700 directory would be added as private).
-fn make_dirs(path: &Path) {
+pub(super) fn make_dirs(path: &Path) {
     if path.is_dir() {
         return;
     }
@@ -31,7 +31,7 @@ fn make_dirs(path: &Path) {
     set_mode(path, 0o755);
 }
 
-fn write_file(path: &Path, contents: &str, mode: u32) {
+pub(super) fn write_file(path: &Path, contents: &str, mode: u32) {
     if let Some(parent) = path.parent() {
         make_dirs(parent);
     }

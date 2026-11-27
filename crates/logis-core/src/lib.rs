@@ -5,6 +5,7 @@
 //! `tests/architecture.rs` enforces that boundary.
 
 pub mod apply;
+pub mod diff;
 pub mod entry_type;
 pub mod managed;
 pub mod pattern_set;

@@ -2,9 +2,11 @@
 
 mod apply;
 mod cat;
+mod diff;
 mod dirs;
 mod globals;
 mod managed;
+mod targets;
 
 use std::path::PathBuf;
 
@@ -46,6 +48,8 @@ enum Command {
     Apply(apply::Args),
     /// Print the target state of files, scripts and symlinks.
     Cat(cat::Args),
+    /// Print, as a git diff, the changes apply would make.
+    Diff(diff::Args),
     /// List the targets the source state manages.
     Managed(managed::Args),
 }
@@ -64,6 +68,7 @@ pub fn run(cli: Cli) -> Result<(), String> {
     match cli.command {
         Some(Command::Apply(args)) => apply::run(&dirs, globals, &args),
         Some(Command::Cat(args)) => cat::run(&dirs, globals.umask, &args),
+        Some(Command::Diff(args)) => diff::run(&dirs, globals, &args),
         Some(Command::Managed(args)) => managed::run(&dirs, &args),
         None => Ok(()),
     }

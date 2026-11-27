@@ -1,6 +1,6 @@
 //! `logis apply`: make the destination match the target state.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use logis_core::apply::{ApplyOptions, apply};
 use logis_core::entry_type::{EntryTypeFilter, EntryTypeSet};
@@ -9,6 +9,7 @@ use logis_core::system::{DryRunSystem, RealSystem, System};
 
 use super::dirs::Dirs;
 use super::globals::Globals;
+use super::targets::select;
 
 #[derive(Debug, clap::Args)]
 pub struct Args {
@@ -47,7 +48,13 @@ pub fn run(dirs: &Dirs, globals: Globals, args: &Args) -> Result<(), String> {
     }
     let state = SourceState::read(&RealSystem, &dirs.source, &dirs.destination)
         .map_err(|e| e.to_string())?;
-    let targets = targets(&state, dirs, globals.source_path, args)?;
+    let targets = select(
+        &state,
+        dirs,
+        globals.source_path,
+        args.recursive,
+        &args.targets,
+    )?;
     let targets: Vec<&str> = targets.iter().map(String::as_str).collect();
     let options = ApplyOptions {
         dest_dir: &dirs.destination,
@@ -64,54 +71,4 @@ pub fn run(dirs: &Dirs, globals: Globals, args: &Args) -> Result<(), String> {
         &RealSystem
     };
     apply(system, &state, &targets, &options).map_err(|e| e.to_string())
-}
-
-/// The targets to apply, sorted and once each: every target if no arguments are given, else
-/// the arguments' targets (found by source path with `--source-path`) and, with
-/// `--recursive`, everything under them.
-fn targets(
-    state: &SourceState,
-    dirs: &Dirs,
-    source_path: bool,
-    args: &Args,
-) -> Result<Vec<String>, String> {
-    if args.targets.is_empty() {
-        return Ok(state.entries().map(|(t, _)| t.to_owned()).collect());
-    }
-    let mut targets = Vec::new();
-    for arg in &args.targets {
-        let target = if source_path {
-            by_source_path(state, dirs, arg)?
-        } else {
-            let target = dirs.target(arg)?;
-            if state.get(&target).is_none() {
-                return Err(format!("{}: not managed", arg.display()));
-            }
-            if args.recursive {
-                let prefix = format!("{target}/");
-                targets.extend(
-                    state
-                        .entries()
-                        .map(|(t, _)| t)
-                        .filter(|t| t.starts_with(&prefix))
-                        .map(str::to_owned),
-                );
-            }
-            target
-        };
-        targets.push(target);
-    }
-    targets.sort();
-    targets.dedup();
-    Ok(targets)
-}
-
-/// chezmoi's `targetRelPathsBySourcePath`: the target whose source entry is at `arg`.
-fn by_source_path(state: &SourceState, dirs: &Dirs, arg: &Path) -> Result<String, String> {
-    let rel = dirs.source_rel(arg)?;
-    state
-        .entries()
-        .find(|(_, entry)| entry.source_rel() == rel)
-        .map(|(target, _)| target.to_owned())
-        .ok_or_else(|| format!("{}: not in source state", arg.display()))
 }

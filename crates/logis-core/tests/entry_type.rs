@@ -143,3 +143,16 @@ fn filter_includes_minus_excludes() {
     assert!(!filter.includes(&dir()));
     assert!(EntryTypeFilter::default().includes(&dir()));
 }
+
+/// chezmoi's `EntryTypeFilter.IncludeEntryTypeBits`, which the diff system uses per write.
+#[test]
+fn filter_includes_types_minus_excluded_types() {
+    let filter = EntryTypeFilter {
+        include: "files,dirs".parse().unwrap(),
+        exclude: "dirs".parse().unwrap(),
+    };
+    assert!(filter.includes_type(EntryType::Files));
+    assert!(!filter.includes_type(EntryType::Dirs));
+    assert!(!filter.includes_type(EntryType::Symlinks));
+    assert!(EntryTypeFilter::default().includes_type(EntryType::Remove));
+}

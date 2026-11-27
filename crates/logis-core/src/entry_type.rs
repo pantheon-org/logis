@@ -198,4 +198,10 @@ impl EntryTypeFilter {
     pub fn includes(&self, entry: &SourceEntry) -> bool {
         self.include.contains(entry) && !self.exclude.contains(entry)
     }
+
+    /// Whether `entry_type` is included and not excluded (chezmoi's `IncludeEntryTypeBits`).
+    #[must_use]
+    pub fn includes_type(&self, entry_type: EntryType) -> bool {
+        self.include.has(entry_type) && !self.exclude.has(entry_type)
+    }
 }
