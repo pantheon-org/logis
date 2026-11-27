@@ -52,7 +52,9 @@ async fn main() {
     let tool = Tool::from_env();
     let os = Os::current();
     eprintln!("BDD: running features against {tool:?} on {os:?}");
+    // A step that matches no definition is skipped; fail on it, or a mistyped step passes.
     LogisWorld::cucumber()
+        .fail_on_skipped()
         .filter_run_and_exit(
             concat!(env!("CARGO_MANIFEST_DIR"), "/tests/features"),
             move |feature, rule, scenario| selected(tool, os, &tags(feature, rule, scenario)),
